@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Polynomial Predictor</title>
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.0"></script>
+        <script src="main.js"></script>
+        <style>
+            canvas{
+                background: skyblue;
+            }
+            body{
+                margin: 0;
+            }
+            input{
+                width: 6%;
+            }
+            #generationElements{
+                opacity: 1;
+            }
+            #datasetElements{
+                opacity: 0;
+            }
+            #datasetElements > input{
+                width: 60%;
+            }
+        </style>
+    </head>
+    <body onload="viewArea.load();">
+        <canvas width=1200 height=600 id="canvas"></canvas>
+        <br>
+        Run <input type="number" id="numTests" value=10000> tests with delay <input type="number" id="delayLength" value=10> ms. <button onclick="runTest()">Go!</button>
+
+        <br>Print closeness: <input type="checkbox" id="doStepLoss"></input>
+        <br><button onclick="resetLR()">Just update learning rate</button>
+        <br><button onclick="reset()">Reset with the following parameters: </button>
+        New random points? <input type="checkbox" id="newRandomPoints" checked onchange="updateUI(1);"></input>
+        Use dataset? <input type="checkbox" id="newDataset" onchange="updateUI(2)"></input>
+        <div>
+        Learning Rate: <input type="number" value=0 id="learningRate">
+        Degree Polynomial of Estimation: <input type="number" value=3 id="evaluationDegree">
+        </div>
+        <div id="generationElements">
+            Degree Polynomial of Generation: <input type="number" value=3 id="degree">
+            Random Variance Multiplier: <input type="number" value=2 id="varianceMultiplier">
+            Use set parameters? <input type="checkbox" id="setParameters" onchange="updateUI(1);"></input>
+        </div>
+        <div id="datasetElements">
+            Separate individual entries by commas.
+            <br>
+            X: <input type="text" value="-5,-4,-3,-2,-1,0,1,2,3,4,5" id="datasetX">
+            <br>
+            Y: <input type="text" value="-5,-4,-3,-2,-1,0,1,2,3,4,5" id="datasetY">
+        </div>
+    </body>
+</html>
