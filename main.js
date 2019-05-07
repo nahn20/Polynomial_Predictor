@@ -42,6 +42,9 @@ function updateLRFromDegree(pd){
         case 5:
             learningRate = 0.000001;
             break;
+        case 10:
+            learningRate = 0.0000000000001;
+            break;
     }
 }
 function generatePoints(){
