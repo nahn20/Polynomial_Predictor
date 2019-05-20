@@ -143,7 +143,6 @@ function train(){
         if(document.getElementById("doStepLoss").checked){
             stepLoss.print();
         }
-
         return stepLoss;
     });
 }
@@ -217,16 +216,16 @@ function updateUI(handler){
 document.addEventListener('keydown', function(event) {
     switch(event.keyCode){
         case 38:
-            viewArea.y += 0.5;
-            break;
-        case 40:
             viewArea.y -= 0.5;
             break;
+        case 40:
+            viewArea.y += 0.5;
+            break;
         case 37:
-            viewArea.x += 0.5;
+            viewArea.x -= 0.5;
             break;
         case 39:
-            viewArea.x -= 0.5;
+            viewArea.x += 0.5;
             break;
         case 191:
             viewArea.sizeMultiplier -= 1;
