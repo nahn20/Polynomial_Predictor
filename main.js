@@ -1,6 +1,4 @@
-//https://blog.tristansokol.com/2018/06/23/my-first-tensorflow.js-project/
-
-//Make show fitness of the prediction
+//inspired by this: https://blog.tristansokol.com/2018/06/23/my-first-tensorflow.js-project/
 var viewArea = {
     x : -18,
     y : -8,
@@ -9,24 +7,24 @@ var viewArea = {
         this.canvas = document.getElementById("canvas");
         this.ctx = this.canvas.getContext("2d");
         updateGuessCoordinates();
-        setInterval(function(){draw();}, 20);
+        draw(); //draw repeats itself with requestAnimationFrame();
     }
 }
 
-var trainedCount = 0;
-var polynomialDegree = 3;
-var estimatePolynomialDegree = 3;
-var learningRate = .000015;
-var trainCoords = [[], []];
-var guessCoords = [[], []];
-var trainParamArray = [];
-var paramArray = [];
-updateLRFromDegree(estimatePolynomialDegree);
+var trainedCount = 0; //Number of times the guess has adjusted itself
+var polynomialDegree = 3; //Degree of polynomial generated
+var estimatePolynomialDegree = 3; //Degree of polynomial estimated
+var learningRate = .000015; //Learning rate (changes based on polynomial)
+var trainCoords = [[], []]; //Formatted [x coordinates], [y coordinates]
+var guessCoords = [[], []]; //Formated [x coordinates], [y coordinates]
+var trainParamArray = []; //Parameters used for the generated black dots
+var paramArray = []; //Parameters estimated by the program
+updateLRFromDegree(estimatePolynomialDegree); //Changes learning rate based on the polynomial degree used for estimation
 var optimizer = tf.train.sgd(learningRate); //Uses Stochastic Gradient Descent to optimize (https://developers.google.com/machine-learning/crash-course/reducing-loss/gradient-descent)
-zeroParameters();
-generatePoints();
+zeroParameters(); //Zeroes the predictions
+generatePoints(); //Creates the black dataset
 function updateLRFromDegree(pd){
-    switch(pd){
+    switch(pd){ //Chosen manually from trial and error
         case 1:
             learningRate = 0.09;
             break;
@@ -53,7 +51,7 @@ function generatePoints(){
     for(let i = 0; i < polynomialDegree+1; i++){
         trainParamArray[i] = (Math.random()-0.5);
     }
-    let q = polynomialDegree*20;
+    let q = polynomialDegree*20; //q is used as the number of points created
     let varianceMultiplier = 2;
     if(document.getElementById("varianceMultiplier")){
         varianceMultiplier = document.getElementById("varianceMultiplier").value;
@@ -68,13 +66,11 @@ function generatePoints(){
 }
 function generatePointsFromDataset(){
     trainCoords = [[], []];
-    let xSet = document.getElementById("datasetX").value.split(",");
+    let xSet = document.getElementById("datasetX").value.split(","); //Reads the x and y coordinates from the text field, splitting them by commas
     let ySet = document.getElementById("datasetY").value.split(",");
-    let x = [];
-    let y = [];
     if(xSet.length == ySet.length){
         for(let i = 0; i < xSet.length; i++){
-            trainCoords[0][i] = parseInt(xSet[i]);
+            trainCoords[0][i] = parseInt(xSet[i]); //Turns them into black coordinates
             trainCoords[1][i] = parseInt(ySet[i]);
         }
     }
@@ -86,15 +82,15 @@ function generatePointsFromDataset(){
 function zeroParameters(){
     paramArray = [];
     for(let i = 0; i < estimatePolynomialDegree+1; i++){
-        paramArray[i] = tf.variable(tf.scalar(0));
+        paramArray[i] = tf.variable(tf.scalar(0)); //Sets every parameter to a scalar which is adjusted by train();
     }
 }
 
 
 function predict(x){
-    return tf.tidy(function(){
+    return tf.tidy(function(){ //Cleans up the tensor that is calculated
         let sum = paramArray[0];
-        for(let i = paramArray.length-1; i > 0; i--){
+        for(let i = paramArray.length-1; i > 0; i--){ //Calculates a predicted y using qx^i-1 + qx^i-2...ax^2 + bx + c except for an ith degree of x
             sum = sum.add(paramArray[i].mul(tf.pow(x, i)));
         }
         return sum;
@@ -105,9 +101,9 @@ async function updateGuessCoordinates(){
     for(let i = 0; i < q; i++){
         guessCoords[0][i] = (i-q/2)/(q/20);
     }
-    guessCoords[1] = await predict(guessCoords[0]).data();
+    guessCoords[1] = await predict(guessCoords[0]).data(); //Takes a set of q number of x coordinates, and makes predictions for a y coordinate for each x
 }
-function draw(){
+function draw(){ //Draws all the stuffz
     viewArea.ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawPoints(trainCoords[0], trainCoords[1], "black");
     drawPoints(guessCoords[0], guessCoords[1], "red")
@@ -115,14 +111,15 @@ function draw(){
     viewArea.ctx.fillStyle = "black";
     viewArea.ctx.fillText("Trained " + trainedCount + " times.", 10, canvas.height-20*(paramArray.length+1)-10);
     viewArea.ctx.fillText("Predicted Parameters:", 10, canvas.height-20*(paramArray.length)-10);
-    for(let i = 0; i < paramArray.length; i++){
+    for(let i = 0; i < paramArray.length; i++){ //Graphs the predicteds
         viewArea.ctx.fillText((Math.round(10000000*paramArray[i].dataSync()[0])/10000000) + "x^" + i, 10, canvas.height-20*i-10);
-    }
+    } //The 10000000 rounds it to a certain decimal number
 
     viewArea.ctx.fillText("Actual Parameters:", canvas.width-100, canvas.height-20*(paramArray.length)-10);
-    for(let i = 0; i < trainParamArray.length; i++){
+    for(let i = 0; i < trainParamArray.length; i++){ //Graphs the black ones
         viewArea.ctx.fillText((Math.round(10000000*trainParamArray[i])/10000000) + "x^" + i, canvas.width-100, canvas.height-20*i-10);
     }
+    requestAnimationFrame(draw);
 }
 function drawPoints(x, y, color){
     for(var i = 0; i < x.length; i++){
@@ -132,14 +129,14 @@ function drawPoints(x, y, color){
     }
 }
 function goodness(prediction, actual){
-    const error = prediction.sub(actual).square().mean();
+    const error = prediction.sub(actual).square().mean(); //Evaluates the goodness of the guess
     return error;
 }
 function train(){
     trainedCount++;
     optimizer.minimize(function(){
         const predsYs = predict(tf.tensor1d(trainCoords[0]));
-        stepLoss = goodness(predsYs, tf.tensor1d(trainCoords[1]))
+        stepLoss = goodness(predsYs, tf.tensor1d(trainCoords[1])); //I didn't code this line (See link at top)
         if(document.getElementById("doStepLoss").checked){
             stepLoss.print();
         }
@@ -154,7 +151,7 @@ function runTest(){
             train();
         }
         else{
-            setTimeout(function(){train(); updateGuessCoordinates();}, i*timeDelay);
+            setTimeout(function(){train(); updateGuessCoordinates();}, i*timeDelay); //Definitely not the most efficient way of doing this
         }
     }
     setTimeout(function(){updateGuessCoordinates();}, count*timeDelay+10);
